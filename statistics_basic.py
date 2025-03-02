@@ -256,7 +256,70 @@ class DistributionBinomial(DistributionNormal):
         plt.title('Probability Histogram of the Data')
         plt.show()
 
+class DistributionStudent(DistributionNormal):
+    """
+    Represents a Student's t-distribution and provides methods for related calculations.
+    """
+    def __init__(self, mean, std, n):
+        """
+        Initializes a DistributionStudent object.
 
+        Args:
+            mean: The mean of the distribution.
+            std: The standard deviation of the distribution.
+            n: The sample size.
+        """
+        super().__init__(mean, std)
+        self.n = n
+        self.df = n - 1  # degrees of freedom
+
+    def get_tscore_from_value(self, value):
+        """
+        Standardizes a given value using the t-distribution's mean and standard deviation.
+
+        Args:
+            value: The value to be standardized.
+
+        Returns:
+            The standardized value (t-score) as a float.
+        """
+        return (value - self.mean) / (self.std / np.sqrt(self.n))
+
+    def get_value_from_tscore(self, tscore):
+        """
+        Converts a t-score back to the original value using the provided mean and standard deviation.
+
+        Args:
+            tscore: The t-score to be converted.
+
+        Returns:
+            The original value as a float.
+        """
+        return tscore * (self.std / np.sqrt(self.n)) + self.mean
+
+    def get_percentile_from_tscore(self, tscore):
+        """
+        Returns the percentile rank for a given t-score.
+
+        Args:
+            tscore: The t-score to be converted.
+
+        Returns:
+            The percentile rank as a float.
+        """
+        return stats.t.cdf(tscore, df=self.df)
+
+    def get_tscore_from_percentile(self, percentile):
+        """
+        Returns the t-score corresponding to a given percentile rank.
+
+        Args:
+            percentile: The percentile rank to be converted.
+
+        Returns:
+            The t-score as a float.
+        """
+        return stats.t.ppf(percentile, df=self.df)
 
 class Sample:
     """
@@ -303,7 +366,7 @@ class Sample:
         if set(self.data) <= {0, 1}:
             self.approx = DistributionBinomial(self.n, self.mean)
         elif self.n < 500:
-            self.approx = DistributionNormal(self.mean, self.std) # DistributionStudent(self.mean, self.std, self.n)
+            self.approx = DistributionStudent(self.mean, self.std, self.n)
         else:
             self.approx = DistributionNormal(self.mean, self.std)
 
