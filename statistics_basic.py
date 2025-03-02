@@ -123,112 +123,6 @@ class DistributionNormal:
         zscore2 = self.get_zscore_from_value(value2)
         return self.get_area_between_two_zscores(zscore1, zscore2)
 
-class Sample:
-    """
-    Represents a sample of numerical data that follows the normal distribution
-    and provides methods for basic statistical calculations using NumPy and SciPy.
-    """
-
-    def __init__(self, data):
-        """
-        Initializes a SampleBinomial object.
-
-        Args:
-            data: A list, tuple, or NumPy array of numerical data.
-                  Raises TypeError if input is not a list, tuple, or NumPy
-                  array, or if elements are not numeric.
-        """
-        if not isinstance(data, (list, tuple, np.ndarray)):
-            raise TypeError("Input data must be a list, tuple, or NumPy array.")
-
-        # Check for numeric types *before* converting to a NumPy array
-        if isinstance(data, (list, tuple)):
-            if not all(isinstance(x, (int, float)) for x in data):
-                raise TypeError("All data elements must be numeric.")
-        elif isinstance(data, np.ndarray):
-             if not np.issubdtype(data.dtype, np.number):
-                raise TypeError("All data elements must be numeric.")
-
-        # Convert to NumPy array for efficiency
-        self.data = np.array(data, dtype=np.float64)
-        self.n = len(self.data)
-
-        # Handles edge cases (empty or single-element arrays)
-        if self.n < 2:
-            raise TypeError("Sample must have at least 2 elements.")
-        
-        # The arithmetic mean (average) using NumPy.
-        self.mean = np.mean(self.data)
-
-        # The sample standard deviation using NumPy with Bessel's correction.
-        # ddof=1 for Bessel's correction.
-        self.std = np.std(self.data, ddof=1)
-
-        # Create a distribution object for the sample.
-        if set(self.data) <= {0, 1}:
-            self.approx = DistributionBinomial(self.n, self.mean)
-        elif self.n < 500:
-            self.approx = DistributionNormal(self.mean, self.std) # DistributionStudent(self.mean, self.std, self.n)
-        else:
-            self.approx = DistributionNormal(self.mean, self.std)
-
-    def __str__(self):
-        """
-        Returns string representation of the SampleBinomial data.
-        """
-        return f"SampleBinomial Data: {self.data}"
-
-    @property
-    def standard_error(self):
-        """
-        Calculates the standard error of the mean using SciPy.
-
-        Returns:
-           The standard error as a float, or None if the sample has
-           fewer than 2 elements.
-        """
-        if self.n < 2:
-            return None  # Standard error undefined for n < 2
-        return stats.sem(self.data)
-
-    def standard_error_monte_carlo(self, num_simulations=1000):
-        """
-        Estimates the standard error of the mean using Monte Carlo simulation.
-
-        Args:
-            num_simulations: The number of Monte Carlo simulations to run.
-                             Defaults to 10000. Must be a positive integer.
-
-        Returns:
-            The estimated standard error as a float, or None if the sample
-            has fewer than 2 elements.
-        """
-        if self.n < 2:
-            return None  # Standard error is undefined for n < 2
-
-        if not isinstance(num_simulations, int) or num_simulations <= 0:
-            raise ValueError("num_simulations must be a positive integer.")
-
-
-        sample_means = np.zeros(num_simulations)
-        for i in range(num_simulations):
-            # Resample with replacement
-            resampled_data = np.random.choice(self.data, size=self.n, replace=True)
-            sample_means[i] = np.mean(resampled_data)
-
-        # Standard deviation of the sample means is the Monte Carlo SE
-        return np.std(sample_means)
-
-    def histogram_probability_data(self):
-        """
-        Generates a histogram of the distribution of the sample.
-        """
-        plt.hist(self.data, bins='auto', alpha=0.7, rwidth=0.85)
-        plt.xlabel('Value')
-        plt.ylabel('Frequency')
-        plt.title('Empirical Histogram of the Observed Data')
-        plt.show()
-
 class DistributionBinomial(DistributionNormal):
     """
     Represents a binomial distribution and provides methods to calculate binomial probabilities.
@@ -362,3 +256,110 @@ class DistributionBinomial(DistributionNormal):
         plt.title('Probability Histogram of the Data')
         plt.show()
 
+
+
+class Sample:
+    """
+    Represents a sample of numerical data that follows the normal distribution
+    and provides methods for basic statistical calculations using NumPy and SciPy.
+    """
+
+    def __init__(self, data):
+        """
+        Initializes a SampleBinomial object.
+
+        Args:
+            data: A list, tuple, or NumPy array of numerical data.
+                  Raises TypeError if input is not a list, tuple, or NumPy
+                  array, or if elements are not numeric.
+        """
+        if not isinstance(data, (list, tuple, np.ndarray)):
+            raise TypeError("Input data must be a list, tuple, or NumPy array.")
+
+        # Check for numeric types *before* converting to a NumPy array
+        if isinstance(data, (list, tuple)):
+            if not all(isinstance(x, (int, float)) for x in data):
+                raise TypeError("All data elements must be numeric.")
+        elif isinstance(data, np.ndarray):
+             if not np.issubdtype(data.dtype, np.number):
+                raise TypeError("All data elements must be numeric.")
+
+        # Convert to NumPy array for efficiency
+        self.data = np.array(data, dtype=np.float64)
+        self.n = len(self.data)
+
+        # Handles edge cases (empty or single-element arrays)
+        if self.n < 2:
+            raise TypeError("Sample must have at least 2 elements.")
+        
+        # The arithmetic mean (average) using NumPy.
+        self.mean = np.mean(self.data)
+
+        # The sample standard deviation using NumPy with Bessel's correction.
+        # ddof=1 for Bessel's correction.
+        self.std = np.std(self.data, ddof=1)
+
+        # Create a distribution object for the sample.
+        if set(self.data) <= {0, 1}:
+            self.approx = DistributionBinomial(self.n, self.mean)
+        elif self.n < 500:
+            self.approx = DistributionNormal(self.mean, self.std) # DistributionStudent(self.mean, self.std, self.n)
+        else:
+            self.approx = DistributionNormal(self.mean, self.std)
+
+    def __str__(self):
+        """
+        Returns string representation of the SampleBinomial data.
+        """
+        return f"SampleBinomial Data: {self.data}"
+
+    @property
+    def standard_error(self):
+        """
+        Calculates the standard error of the mean using SciPy.
+
+        Returns:
+           The standard error as a float, or None if the sample has
+           fewer than 2 elements.
+        """
+        if self.n < 2:
+            return None  # Standard error undefined for n < 2
+        return stats.sem(self.data)
+
+    def standard_error_monte_carlo(self, num_simulations=1000):
+        """
+        Estimates the standard error of the mean using Monte Carlo simulation.
+
+        Args:
+            num_simulations: The number of Monte Carlo simulations to run.
+                             Defaults to 10000. Must be a positive integer.
+
+        Returns:
+            The estimated standard error as a float, or None if the sample
+            has fewer than 2 elements.
+        """
+        if self.n < 2:
+            return None  # Standard error is undefined for n < 2
+
+        if not isinstance(num_simulations, int) or num_simulations <= 0:
+            raise ValueError("num_simulations must be a positive integer.")
+
+
+        sample_means = np.zeros(num_simulations)
+        for i in range(num_simulations):
+            # Resample with replacement
+            resampled_data = np.random.choice(self.data, size=self.n, replace=True)
+            sample_means[i] = np.mean(resampled_data)
+
+        # Standard deviation of the sample means is the Monte Carlo SE
+        return np.std(sample_means)
+
+    def histogram_probability_data(self):
+        """
+        Generates a histogram of the distribution of the sample.
+        """
+        plt.hist(self.data, bins='auto', alpha=0.7, rwidth=0.85)
+        plt.xlabel('Value')
+        plt.ylabel('Frequency')
+        plt.title('Empirical Histogram of the Observed Data')
+        plt.show()
