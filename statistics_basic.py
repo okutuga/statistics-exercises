@@ -426,3 +426,28 @@ class Sample:
         plt.ylabel('Frequency')
         plt.title('Empirical Histogram of the Observed Data')
         plt.show()
+
+    def paired_ttest(self, sample2):
+        """
+        Performs a paired t-test between two samples.
+
+        Args:
+            sample2: A Sample object representing the second sample.
+
+        Returns:
+            The t-statistic and p-value as a tuple.
+        """
+        if not isinstance(sample2, Sample):
+            raise TypeError("Input must be a Sample object.")
+
+        if self.n != sample2.n:
+            raise ValueError("Samples must have the same size.")
+
+        # Calculate the differences between the paired samples
+        differences = self.data - sample2.data
+
+        # Perform a one-sample t-test on the differences
+        # 0 is the null hypothesis value (no difference)
+        t_statistic, p_value = stats.ttest_1samp(differences, 0)
+
+        return t_statistic, p_value
