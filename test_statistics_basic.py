@@ -2,15 +2,20 @@
 
 import unittest
 import numpy as np
-from statistics_basic import NormalSample, NormalDistribution  # Import your NormalSample and NormalDistribution classes
+from statistics_basic import SampleNormal, DistributionNormal, DistributionBinomial  # Import your SampleNormal and DistributionNormal classes
 from scipy import stats
 
-class TestNormalDistribution(unittest.TestCase):
+class TestDistributionNormal(unittest.TestCase):
 
     def setUp(self):
+        """
+        Fathers’ heights follow the normal curve with x_mean = 68.3 in and s = 1.8 in.
+        What percentage of fathers have heights between 67.4 in and 71.9 in?
+        What is the 30th percentile of the fathers’ heights?
+        """
         self.mean = 68.3
         self.std = 1.8
-        self.dist = NormalDistribution(self.mean, self.std)
+        self.dist = DistributionNormal(self.mean, self.std)
 
     def test_get_zscore_from_value(self):
         value = 67.4
@@ -38,14 +43,14 @@ class TestNormalDistribution(unittest.TestCase):
         expected_area = 0.669
         self.assertAlmostEqual(self.dist.get_area_between_two_values(value1, value2), expected_area, delta=0.0005)
 
-class TestNormalSample(unittest.TestCase):
+class TestSampleNormal(unittest.TestCase):
     """
-    Unit tests for the NormalSample class.
+    Unit tests for the SampleNormal class.
     """
 
     def setUp(self):
         self.data = [1.23, 1.18, 1.22, 1.22]
-        self.sample = NormalSample(self.data)
+        self.sample = SampleNormal(self.data)
 
     def test_mean(self):
         self.assertAlmostEqual(self.sample.mean, np.mean(self.data))
@@ -75,6 +80,55 @@ class TestNormalSample(unittest.TestCase):
         zscore = (value - np.mean(self.data)) / np.std(self.data, ddof=1)
         expected_percentile = stats.norm.cdf(zscore)
         self.assertAlmostEqual(self.sample.get_percentile_from_value(value), expected_percentile)
+
+class TestDistributionBinomial(unittest.TestCase):
+    """
+    Unit tests for the DistributionBinomial class.
+    """
+
+    def test_probability(self):
+        # You play an online game 10 times. Each time there are three possible outcomes:
+        # P(win a big prize) = 10%, P(win a small prize) = 20%, P(win nothing) = 70%.
+        # What is P(win two small prizes) ?
+        
+        # Number of trials
+        n = 10
+        # Probability of success
+        p = 0.2
+        # Number of successes
+        k = 2
+        dist = DistributionBinomial(n, p)
+        expected_probability = 0.302 # 45 * 0.2 ** 2 * 0.8 ** 8
+        self.assertAlmostEqual(dist.binomial_probability(k), expected_probability, delta=0.0005)
+
+    def test_area_to_the_left(self):
+        """
+        In the previous example, we had p = P(win a small prize) = 0.2.
+        Play n = 50 times. What is P(at most 12 small prizes) ?
+        """
+        n = 50
+        p = 0.2
+        k = 12
+        dist = DistributionBinomial(n, p)
+        # Calculate the area to the left of k
+        expected_area = sum(dist.binomial_probability(i) for i in range(0, k + 1))
+        actual_area = dist.get_percentile_from_sum(k)
+        self.assertAlmostEqual(actual_area, expected_area, delta=0.1)
+
+    def test_area_to_the_left_precise(self):
+        """
+        In the previous example, we had p = P(win a small prize) = 0.2.
+        Play n = 50 times. What is P(at most 12 small prizes) ?
+        """
+        n = 500
+        p = 0.2
+        k = 120
+        dist = DistributionBinomial(n, p)
+        # Calculate the area to the left of k
+        expected_area = sum(dist.binomial_probability(i) for i in range(0, k + 1))
+        actual_area = dist.get_percentile_from_sum(k)
+        self.assertAlmostEqual(actual_area, expected_area, delta=0.0005)
+
 
 if __name__ == '__main__':
     unittest.main()

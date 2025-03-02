@@ -1,13 +1,8 @@
 import numpy as np
-from scipy import stats
+from scipy import stats, special
+import matplotlib.pyplot as plt 
 
-class Statistics:
-    """
-    Base class for statistical calculations.
-    """
-    
-
-class NormalDistribution(Statistics):
+class DistributionNormal:
     """
     Represents a normal distribution and provides methods to standardize values.
     """
@@ -130,7 +125,7 @@ class NormalDistribution(Statistics):
         zscore2 = self.get_zscore_from_value(value2)
         return self.get_area_between_two_zscores(zscore1, zscore2)
 
-class NormalSample(NormalDistribution):
+class SampleNormal(DistributionNormal):
     """
     Represents a sample of numerical data that follows the normal distribution
     and provides methods for basic statistical calculations using NumPy and SciPy.
@@ -138,7 +133,7 @@ class NormalSample(NormalDistribution):
 
     def __init__(self, data):
         """
-        Initializes a Sample object.
+        Initializes a SampleBinomial object.
 
         Args:
             data: A list, tuple, or NumPy array of numerical data.
@@ -155,7 +150,6 @@ class NormalSample(NormalDistribution):
         elif isinstance(data, np.ndarray):
              if not np.issubdtype(data.dtype, np.number):
                 raise TypeError("All data elements must be numeric.")
-
 
         # Convert to NumPy array for efficiency
         self.data = np.array(data, dtype=np.float64)
@@ -193,9 +187,9 @@ class NormalSample(NormalDistribution):
 
     def __str__(self):
         """
-        Returns string representation of the Sample data.
+        Returns string representation of the SampleBinomial data.
         """
-        return f"Sample Data: {self.data}"
+        return f"SampleBinomial Data: {self.data}"
 
     @property
     def standard_error(self):
@@ -252,3 +246,241 @@ class NormalSample(NormalDistribution):
 
         # Standard deviation of the sample means is the Monte Carlo SE
         return np.std(sample_means)
+
+class DistributionBinomial(DistributionNormal):
+    """
+    Represents a binomial distribution and provides methods to calculate binomial probabilities.
+    """
+    def __init__(self, n, p):
+        """
+        Initializes a DistributionBinomial object.
+
+        Args:
+            n: The number of experiments.
+            p: The probability of success in each experiment.
+        """
+        self.n = n
+        self.p = p
+        # Calculate mean and standard deviation
+        self.mean = p
+        self.std = np.sqrt(1 / n * p * (1 - p))
+
+    @property
+    def probability_success(self):
+        """
+        Calculates the probability of success in a single experiment.
+
+        Returns:
+            The probability of success as a float.
+        """
+        return self.p
+    
+    @property
+    def probability_failure(self):
+        """
+        Calculates the probability of failure in a single experiment.
+
+        Returns:
+            The probability of failure as a float.
+        """
+        return 1 - self.p
+
+    def binomial_coefficient(self, k):
+        """
+        Calculates the binomial coefficient for k successes in n experiments.
+
+        Args:
+            k: The number of successes.
+
+        Returns:
+            The binomial coefficient as an integer.
+        """
+        return special.comb(self.n, k)
+
+    def binomial_probability(self, k):
+        """
+        Calculates the binomial probability for k successes in n experiments.
+
+        Args:
+            k: The number of successes.
+
+        Returns:
+            The binomial probability as a float.
+        """
+        coeff = self.binomial_coefficient(k)
+        return coeff * (self.p ** k) * ((1 - self.p) ** (self.n - k))
+
+    def binomial_probability_all(self):
+        """
+        Generates a histogram of the binomial probabilities for all possible
+        numbers of successes (from 0 to n).
+
+        Returns:
+            probabilities: The binomial probability as a float array.
+            k_values: The number of successes as an integer array.
+        """
+        k_values = np.arange(0, self.n + 1)
+        probabilities = [self.binomial_probability(k) for k in k_values]
+        return probabilities, k_values
+
+    def get_percentile_from_sum(self, sum):
+        """
+        Returns the percentile rank for a given value using the provided mean and standard deviation.
+
+        Args:
+            sum: The value to be converted.
+
+        Returns:
+            The percentile rank as a float.
+        """
+        value = sum / self.n
+        zscore = self.get_zscore_from_value(value)
+        return self.get_percentile_from_zscore(zscore)
+    
+    def get_sum_from_percentile(self, percentile):
+        """
+        Returns the value corresponding to a given percentile rank.
+
+        Args:
+            percentile: The percentile rank to be converted.
+
+        Returns:
+            The value as a float.
+        """
+        zscore = self.get_zscore_from_percentile(percentile)
+        value = self.get_value_from_zscore(zscore)
+        return round(value * self.n)
+
+    def histogram_probability_statistic(self):
+        """
+        Generates a histogram of the binomial probabilities for all possible
+        numbers of successes (from 0 to n).
+
+        Displays the histogram using matplotlib.
+        """
+        [probabilities, k_values] = self.binomial_probability_all()
+
+        plt.bar(k_values, probabilities)
+        plt.xlabel('Number of Successes')
+        plt.ylabel('Probability')
+        plt.title('Probability Histogram For The Statistic')
+        plt.show()
+
+    def histogram_probability_data(self):
+        """
+        Generates a histogram of the binomial probabilities for a single
+        trial.
+        """
+        x_axis_values = [0, 1]
+        y_axis_values = [self.probability_failure, self.probability_success]
+        plt.bar(x_axis_values, y_axis_values)
+        plt.xlabel('Outcome')
+        plt.xticks([0, 1], ['Failure', 'Success'])
+        plt.ylabel('Probability')
+        plt.title('Probability Histogram of the Data')
+        plt.show()
+
+class SampleBinomial(DistributionBinomial):
+    """
+    Represents a sample of numerical data that follows the binomial distribution
+    and provides methods for basic statistical calculations using NumPy and SciPy.
+    """
+
+    def __init__(self, data):
+        """
+        Initializes a SampleBinomial object.
+
+        Args:
+            data: A list, tuple, or NumPy array of numerical data.
+                    Raises TypeError if input is not a list, tuple, or NumPy
+                    array, or if elements are not numeric.
+        """
+        if not isinstance(data, (list, tuple, np.ndarray)):
+            raise TypeError("Input data must be a list, tuple, or NumPy array.")
+
+        # Check for numeric types *before* converting to a NumPy array
+        if isinstance(data, (list, tuple)):
+            if not all(isinstance(x, (int, float)) for x in data):
+                raise TypeError("All data elements must be numeric.")
+        elif isinstance(data, np.ndarray):
+            if not np.issubdtype(data.dtype, np.number):
+                raise TypeError("All data elements must be numeric.")
+
+        # Convert to NumPy array for efficiency
+        self.data = np.array(data, dtype=np.float64)
+        self.n = len(self.data)
+        self.mean = None  # Initialize properties as None
+        self.std = None
+        self.p = None
+        self._calculate_properties()  # Calculate on initialization
+
+    def _calculate_properties(self):
+        """
+        Calculates and sets the mean, standard deviation, and probability of success properties.
+
+        Handles edge cases (empty or single-element arrays) by setting
+        properties to None.
+        """
+        if self.data.size > 0:
+            self.mean = np.mean(self.data)
+            self.p = self.mean
+            self.std = np.sqrt(self.p * (1 - self.p))
+
+    def __str__(self):
+        """
+        Returns string representation of the SampleBinomial data.
+        """
+        return f"SampleBinomial Data: {self.data}"
+
+    @property
+    def standard_error(self):
+        """
+        Calculates the standard error of the mean using SciPy.
+
+        Returns:
+            The standard error as a float, or None if the sample has
+            fewer than 2 elements.
+        """
+        if self.data.size < 2:
+            return None  # Standard error undefined for n < 2
+        return stats.sem(self.data)
+
+    def standard_error_monte_carlo(self, num_simulations=1000):
+        """
+        Estimates the standard error of the mean using Monte Carlo simulation.
+
+        Args:
+            num_simulations: The number of Monte Carlo simulations to run.
+                                Defaults to 1000. Must be a positive integer.
+
+        Returns:
+            The estimated standard error as a float, or None if the sample
+            has fewer than 2 elements.
+        """
+        if self.data.size < 2:
+            return None  # Standard error is undefined for n < 2
+
+        if not isinstance(num_simulations, int) or num_simulations <= 0:
+            raise ValueError("num_simulations must be a positive integer.")
+
+        sample_means = np.zeros(num_simulations)
+        for i in range(num_simulations):
+            # Resample with replacement
+            resampled_data = np.random.choice(self.data, size=self.data.size, replace=True)
+            sample_means[i] = np.mean(resampled_data)
+
+        # Standard deviation of the sample means is the Monte Carlo SE
+        return np.std(sample_means)
+
+    def histogram_probability_data(self):
+        """
+        Generates a histogram of the binomial distribution of the sample.
+        """
+        x_axis_values = [0, 1]
+        y_axis_values = [np.mean(self.data == 0), np.mean(self.data == 1)]
+        plt.bar(x_axis_values, y_axis_values)
+        plt.xlabel('Outcome')
+        plt.xticks([0, 1], ['Failure', 'Success'])
+        plt.ylabel('Frequency')
+        plt.title('Empirical Histogram of the Observed Data')
+        plt.show()
