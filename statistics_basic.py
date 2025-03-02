@@ -63,8 +63,6 @@ class DistributionNormal:
 
         Args:
             value: The value to be converted.
-            mean: The mean of the data.
-            std: The standard deviation of the data.
 
         Returns:
             The percentile rank as a float.
@@ -125,7 +123,7 @@ class DistributionNormal:
         zscore2 = self.get_zscore_from_value(value2)
         return self.get_area_between_two_zscores(zscore1, zscore2)
 
-class SampleNormal(DistributionNormal):
+class Sample:
     """
     Represents a sample of numerical data that follows the normal distribution
     and provides methods for basic statistical calculations using NumPy and SciPy.
@@ -153,37 +151,26 @@ class SampleNormal(DistributionNormal):
 
         # Convert to NumPy array for efficiency
         self.data = np.array(data, dtype=np.float64)
-
-
         self.n = len(self.data)
-        self.mean = None  # Initialize properties as None
-        self.std = None
-        self._calculate_properties()  # Calculate on initialization
 
-    def _calculate_properties(self):
-        """
-        Calculates and sets the mean and standard deviation properties.
+        # Handles edge cases (empty or single-element arrays)
+        if self.n < 2:
+            raise TypeError("Sample must have at least 2 elements.")
+        
+        # The arithmetic mean (average) using NumPy.
+        self.mean = np.mean(self.data)
 
-        Handles edge cases (empty or single-element arrays) by setting
-        properties to None.
-        """
-        if self.n > 0:
-            """
-            The arithmetic mean (average) using NumPy.
+        # The sample standard deviation using NumPy with Bessel's correction.
+        # ddof=1 for Bessel's correction.
+        self.std = np.std(self.data, ddof=1)
 
-            Returns:
-                The mean of the data as a float, or None if the sample is empty.
-            """
-            self.mean = np.mean(self.data)
-            """
-            The sample standard deviation using NumPy with Bessel's correction.
-            # ddof=1 for Bessel's correction. Set to None if n < 2
-
-            Returns:
-                The sample standard deviation as a float, or None if the sample
-                has fewer than 2 elements.
-            """
-            self.std = np.std(self.data, ddof=1) if self.n > 1 else None
+        # Create a distribution object for the sample.
+        if set(self.data) <= {0, 1}:
+            self.approx = DistributionBinomial(self.n, self.mean)
+        elif self.n < 500:
+            self.approx = DistributionNormal(self.mean, self.std) # DistributionStudent(self.mean, self.std, self.n)
+        else:
+            self.approx = DistributionNormal(self.mean, self.std)
 
     def __str__(self):
         """
@@ -203,21 +190,6 @@ class SampleNormal(DistributionNormal):
         if self.n < 2:
             return None  # Standard error undefined for n < 2
         return stats.sem(self.data)
-    
-    @property
-    def zscore(self):
-        """
-        Standardizes a given value using the sample's mean and standard deviation.
-
-        Args:
-            value: The value to be standardized.
-
-        Returns:
-            The standardized value (z-score) as a float, or None if the sample
-            standard deviation is None.
-        """
-        
-        return stats.zscore(self.data, ddof=1)
 
     def standard_error_monte_carlo(self, num_simulations=1000):
         """
@@ -246,6 +218,16 @@ class SampleNormal(DistributionNormal):
 
         # Standard deviation of the sample means is the Monte Carlo SE
         return np.std(sample_means)
+
+    def histogram_probability_data(self):
+        """
+        Generates a histogram of the distribution of the sample.
+        """
+        plt.hist(self.data, bins='auto', alpha=0.7, rwidth=0.85)
+        plt.xlabel('Value')
+        plt.ylabel('Frequency')
+        plt.title('Empirical Histogram of the Observed Data')
+        plt.show()
 
 class DistributionBinomial(DistributionNormal):
     """
@@ -380,107 +362,3 @@ class DistributionBinomial(DistributionNormal):
         plt.title('Probability Histogram of the Data')
         plt.show()
 
-class SampleBinomial(DistributionBinomial):
-    """
-    Represents a sample of numerical data that follows the binomial distribution
-    and provides methods for basic statistical calculations using NumPy and SciPy.
-    """
-
-    def __init__(self, data):
-        """
-        Initializes a SampleBinomial object.
-
-        Args:
-            data: A list, tuple, or NumPy array of numerical data.
-                    Raises TypeError if input is not a list, tuple, or NumPy
-                    array, or if elements are not numeric.
-        """
-        if not isinstance(data, (list, tuple, np.ndarray)):
-            raise TypeError("Input data must be a list, tuple, or NumPy array.")
-
-        # Check for numeric types *before* converting to a NumPy array
-        if isinstance(data, (list, tuple)):
-            if not all(isinstance(x, (int, float)) for x in data):
-                raise TypeError("All data elements must be numeric.")
-        elif isinstance(data, np.ndarray):
-            if not np.issubdtype(data.dtype, np.number):
-                raise TypeError("All data elements must be numeric.")
-
-        # Convert to NumPy array for efficiency
-        self.data = np.array(data, dtype=np.float64)
-        self.n = len(self.data)
-        self.mean = None  # Initialize properties as None
-        self.std = None
-        self.p = None
-        self._calculate_properties()  # Calculate on initialization
-
-    def _calculate_properties(self):
-        """
-        Calculates and sets the mean, standard deviation, and probability of success properties.
-
-        Handles edge cases (empty or single-element arrays) by setting
-        properties to None.
-        """
-        if self.data.size > 0:
-            self.mean = np.mean(self.data)
-            self.p = self.mean
-            self.std = np.sqrt(self.p * (1 - self.p))
-
-    def __str__(self):
-        """
-        Returns string representation of the SampleBinomial data.
-        """
-        return f"SampleBinomial Data: {self.data}"
-
-    @property
-    def standard_error(self):
-        """
-        Calculates the standard error of the mean using SciPy.
-
-        Returns:
-            The standard error as a float, or None if the sample has
-            fewer than 2 elements.
-        """
-        if self.data.size < 2:
-            return None  # Standard error undefined for n < 2
-        return stats.sem(self.data)
-
-    def standard_error_monte_carlo(self, num_simulations=1000):
-        """
-        Estimates the standard error of the mean using Monte Carlo simulation.
-
-        Args:
-            num_simulations: The number of Monte Carlo simulations to run.
-                                Defaults to 1000. Must be a positive integer.
-
-        Returns:
-            The estimated standard error as a float, or None if the sample
-            has fewer than 2 elements.
-        """
-        if self.data.size < 2:
-            return None  # Standard error is undefined for n < 2
-
-        if not isinstance(num_simulations, int) or num_simulations <= 0:
-            raise ValueError("num_simulations must be a positive integer.")
-
-        sample_means = np.zeros(num_simulations)
-        for i in range(num_simulations):
-            # Resample with replacement
-            resampled_data = np.random.choice(self.data, size=self.data.size, replace=True)
-            sample_means[i] = np.mean(resampled_data)
-
-        # Standard deviation of the sample means is the Monte Carlo SE
-        return np.std(sample_means)
-
-    def histogram_probability_data(self):
-        """
-        Generates a histogram of the binomial distribution of the sample.
-        """
-        x_axis_values = [0, 1]
-        y_axis_values = [np.mean(self.data == 0), np.mean(self.data == 1)]
-        plt.bar(x_axis_values, y_axis_values)
-        plt.xlabel('Outcome')
-        plt.xticks([0, 1], ['Failure', 'Success'])
-        plt.ylabel('Frequency')
-        plt.title('Empirical Histogram of the Observed Data')
-        plt.show()

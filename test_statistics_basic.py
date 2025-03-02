@@ -2,7 +2,7 @@
 
 import unittest
 import numpy as np
-from statistics_basic import SampleNormal, DistributionNormal, DistributionBinomial  # Import your SampleNormal and DistributionNormal classes
+from statistics_basic import Sample, DistributionNormal, DistributionBinomial  # Import your SampleNormal and DistributionNormal classes
 from scipy import stats
 
 class TestDistributionNormal(unittest.TestCase):
@@ -43,14 +43,14 @@ class TestDistributionNormal(unittest.TestCase):
         expected_area = 0.669
         self.assertAlmostEqual(self.dist.get_area_between_two_values(value1, value2), expected_area, delta=0.0005)
 
-class TestSampleNormal(unittest.TestCase):
+class TestSample(unittest.TestCase):
     """
-    Unit tests for the SampleNormal class.
+    Unit tests for the Sample class.
     """
 
     def setUp(self):
         self.data = [1.23, 1.18, 1.22, 1.22]
-        self.sample = SampleNormal(self.data)
+        self.sample = Sample(self.data)
 
     def test_mean(self):
         self.assertAlmostEqual(self.sample.mean, np.mean(self.data))
@@ -61,25 +61,10 @@ class TestSampleNormal(unittest.TestCase):
     def test_standard_error(self):
         self.assertAlmostEqual(self.sample.standard_error, np.std(self.data, ddof=1) / np.sqrt(len(self.data)))
 
-    def test_get_zscore_from_value(self):
-        expected_standardized = (np.array(self.data) - np.mean(self.data)) / np.std(self.data, ddof=1)
-        np.testing.assert_allclose(self.sample.zscore, expected_standardized)
-
-    def test_get_value_from_zscore(self):
-        zscore = 1.0
-        expected_value = zscore * np.std(self.data, ddof=1) + np.mean(self.data)
-        self.assertAlmostEqual(self.sample.get_value_from_zscore(zscore), expected_value)
-
     def test_standard_error_monte_carlo(self):
         se = self.sample.standard_error_monte_carlo(num_simulations=1000)
         self.assertIsNotNone(se)
         self.assertGreater(se, 0)
-
-    def test_get_percentile_from_value(self):
-        value = 1.20
-        zscore = (value - np.mean(self.data)) / np.std(self.data, ddof=1)
-        expected_percentile = stats.norm.cdf(zscore)
-        self.assertAlmostEqual(self.sample.get_percentile_from_value(value), expected_percentile)
 
 class TestDistributionBinomial(unittest.TestCase):
     """
