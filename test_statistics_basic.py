@@ -2,7 +2,7 @@
 
 import unittest
 import numpy as np
-from statistics_basic import Sample, DistributionNormal, DistributionBinomial  # Import your SampleNormal and DistributionNormal classes
+from statistics_basic import Sample, DistributionNormal, DistributionBinomial, DistributionStudent  # Import your classes
 from scipy import stats
 
 class TestDistributionNormal(unittest.TestCase):
@@ -114,6 +114,39 @@ class TestDistributionBinomial(unittest.TestCase):
         actual_area = dist.get_percentile_from_sum(k)
         self.assertAlmostEqual(actual_area, expected_area, delta=0.0005)
 
+class TestDistributionStudent(unittest.TestCase):
+    """
+    Unit tests for the DistributionStudent class.
+    """
+
+    def setUp(self):
+        """
+        Example: A sample of 10 students' test scores with a mean of 75 and a standard deviation of 10.
+        """
+        self.mean = 75
+        self.std = 10
+        self.n = 10
+        self.dist = DistributionStudent(self.mean, self.std, self.n)
+
+    def test_get_tscore_from_value(self):
+        value = 80
+        expected_tscore = 1.5811
+        self.assertAlmostEqual(self.dist.get_tscore_from_value(value), expected_tscore, delta=0.05)
+
+    def test_get_value_from_tscore(self):
+        tscore = 1.5811
+        expected_value = 80
+        self.assertAlmostEqual(self.dist.get_value_from_tscore(tscore), expected_value, delta=0.05)
+
+    def test_get_percentile_from_tscore(self):
+        tscore = 1.5811
+        expected_percentile = 0.925
+        self.assertAlmostEqual(self.dist.get_percentile_from_tscore(tscore), expected_percentile, delta=0.005)
+
+    def test_get_tscore_from_percentile(self):
+        percentile = 0.925
+        expected_tscore = 1.5811
+        self.assertAlmostEqual(self.dist.get_tscore_from_percentile(percentile), expected_tscore, delta=0.05)
 
 if __name__ == '__main__':
     unittest.main()
