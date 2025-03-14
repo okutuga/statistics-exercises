@@ -42,7 +42,7 @@ class BikeKPIReport:
             for rider in self.data['rider_number'].unique():
                 rider_data = self.data[self.data['rider_number'] == rider]
                 rider_label = f"{rider_data['rider_name'].iloc[0][0]}{rider_data['rider_surname'].iloc[0][0]}{rider}"
-                bike_color = self.bike_colors.get(rider_data['bike_name'].iloc[0], 'black')
+                bike_color = self.bike_colors.get(rider_data['rider_bike_name'].iloc[0], 'black')
                 fig.add_trace(go.Scatter(
                     x=rider_data[x_data],
                     y=rider_data[y_data],
