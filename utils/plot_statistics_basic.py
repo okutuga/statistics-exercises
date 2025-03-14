@@ -1,5 +1,5 @@
 import numpy as np
-from statistics_basic import Sample
+from utils.statistics_basic import Sample
 
 import matplotlib.pyplot as plt
 

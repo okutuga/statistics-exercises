@@ -2,7 +2,7 @@
 
 import unittest
 import numpy as np
-from statistics_basic import Sample, DistributionNormal, DistributionBinomial, DistributionStudent  # Import your classes
+from utils.statistics_basic import Sample, DistributionNormal, DistributionBinomial, DistributionStudent  # Import your classes
 from scipy import stats
 
 class TestDistributionNormal(unittest.TestCase):

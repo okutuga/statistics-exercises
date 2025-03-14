@@ -11,19 +11,13 @@ def xml_to_parquet(xml_file, parquet_file):
         xml_file: The path to the input XML file.
         parquet_file: The path to the output Parquet file.
     """
-    # Parse the XML file
     tree = ET.parse(xml_file)
     root = tree.getroot()
-
-    # Extract data from XML
+    for child in root:
+        print(child.tag, child.attrib)
     data = []
-    bike_colors = {
-        "Ducati": "red",
-        "KTM": "orange",
-        "Yamaha": "blue",
-        "Honda": "yellow",
-        "Aprilia": "green"
-    }
+    bike_colors = {"Ducati": "red", "Honda": "blue", "Yamaha": "yellow", "KTM": "orange", "Aprilia": "green"}
+
     for rider_info in root.findall(".//rider_info"):
         rider_data = {
             "rider_number": rider_info.get("rider_number"),
@@ -65,12 +59,11 @@ def read_parquet(parquet_file):
     return df
 
 # Example usage
-xml_file = './Analysis for THA MotoGP RAC.xml'
-parquet_file = './TimingDB.parquet'
+xml_file = './Timing/Analysis for THA MotoGP RAC.xml'
+parquet_file = './Timing/TimingDB.parquet'
 xml_to_parquet(xml_file, parquet_file)
 
 # Read the Parquet file
-parquet_file = './TimingDB.parquet'
 df = read_parquet(parquet_file)
 
 # Define plots
@@ -93,8 +86,7 @@ plots = [
 
 # Generate the report
 report = BikeKPIReport(df)
-report.generate_html_report('bike_kpi_report.html', plots)
+report.generate_html_report('./Timing/bike_kpi_report.html', plots)
 
 # Display the first few rows of the DataFrame
 print(df.head())
-print(df.columns)
