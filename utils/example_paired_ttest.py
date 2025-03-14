@@ -1,5 +1,5 @@
 import numpy as np
-from utils.statistics_basic import Sample
+from statistics_basic import Sample
 
 def lap_time_to_seconds(lap_time_str):
     minutes, seconds = map(float, lap_time_str.split(':'))

@@ -2,6 +2,12 @@
 
 import unittest
 import numpy as np
+import sys
+import os
+
+# Add the parent directory of 'statistics_exercises' to the Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 from utils.statistics_basic import Sample, DistributionNormal, DistributionBinomial, DistributionStudent  # Import your classes
 from scipy import stats
 
