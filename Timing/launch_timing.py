@@ -1,6 +1,6 @@
 import pandas as pd  # Importing pandas library for data manipulation
 import xml.etree.ElementTree as ET  # Importing ElementTree for parsing XML files
-from business_intelligence_viewer import TimingReport  # Importing custom report generation module
+from business_intelligence_viewer import LinePlot
 import numpy as np  # Importing numpy for numerical operations
 import os  # Importing os for operating system dependent functionality
 import glob  # Importing glob for file pattern matching
@@ -36,22 +36,24 @@ def main():
             "x_label": "Lap Number",  # Define x-axis label
             "y_label": "Lap Time (seconds)"  # Define y-axis label
         },
+        {
+            "x_data": "run_lap",  # Define x-axis data
+            "y_data": "lap_speed",  # Define y-axis data
+            "title": "Maximum Speed vs Lap Number",  # Define plot title
+            "x_label": "Lap Number",  # Define x-axis label
+            "y_label": "Maximum Speed (m/s)"  # Define y-axis label
+        }
     ]
-    """
-    {
-        "x_data": "run_lap",  # Define x-axis data
-        "y_data": "lap_speed",  # Define y-axis data
-        "title": "Maximum Speed vs Lap Number",  # Define plot title
-        "x_label": "Lap Number",  # Define x-axis label
-        "y_label": "Maximum Speed (m/s)"  # Define y-axis label
-    }
-    """
-    report = TimingReport(df)  # Create a TimingReport object
+    report = LinePlot(df)  # Updated class name
     report.generate_html_report(html_file, plots)  # Generate an HTML report with the plots
 
-    # Some basic statistics
-    print(df[df["rider_number"] == "93"]['lap_time'])
-    sample = Sample(df[df["rider_number"] == "93"]['lap_time'])
+    """
+    # Distribution of lap times
+    sample = Sample(df[df["rider_number"] == "73"]['lap_time'])
+    sample.histogram_probability_data()
+    """
+    # Distribution of lap speeds for KTM riders
+    sample = Sample(df[df["rider_bike_name"] == "KTM"]['lap_speed'])
     sample.histogram_probability_data()
 
 def parse_xml(xml_file):

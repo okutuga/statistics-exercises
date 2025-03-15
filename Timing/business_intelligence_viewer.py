@@ -5,10 +5,10 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-class TimingReport:
+class LinePlot:
     def __init__(self, data):
         """
-        Initializes the TimingReport object.
+        Initializes the LinePlot object.
 
         Args:
             data: A DataFrame containing the KPI data for the bikes.
@@ -60,7 +60,8 @@ class TimingReport:
         fig.update_layout(
             title='Timing Report',
             legend_title='Riders',
-            template='plotly_white'
+            template='plotly_white',
+            height=700 * len(plots)  # Adjust height for scrolling
         )
 
         # Add interactive filter
@@ -91,5 +92,9 @@ class TimingReport:
             ]
         )
 
-        # Save the plot as an HTML file
-        fig.write_html(output_file)
+        # Save the plot as an HTML file with tabs
+        with open(output_file, 'w') as f:
+            f.write('<html><head><title>Timing Report</title></head><body>')
+            f.write('<div style="overflow-y: scroll; height: 90vh;">')
+            f.write(fig.to_html(full_html=False, include_plotlyjs='cdn'))
+            f.write('</div></body></html>')
