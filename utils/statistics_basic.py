@@ -1,6 +1,7 @@
 import numpy as np
 from scipy import stats, special
 import matplotlib.pyplot as plt 
+import pandas as pd  # Add pandas import
 
 class DistributionNormal:
     """
@@ -329,23 +330,27 @@ class Sample:
 
     def __init__(self, data):
         """
-        Initializes a SampleBinomial object.
+        Initializes a Sample object.
 
         Args:
-            data: A list, tuple, or NumPy array of numerical data.
-                  Raises TypeError if input is not a list, tuple, or NumPy
-                  array, or if elements are not numeric.
+            data: A list, tuple, NumPy array, or pandas Series of numerical data.
+                  Raises TypeError if input is not a list, tuple, NumPy array, or pandas Series,
+                  or if elements are not numeric.
         """
-        if not isinstance(data, (list, tuple, np.ndarray)):
-            raise TypeError("Input data must be a list, tuple, or NumPy array.")
+        if not isinstance(data, (list, tuple, np.ndarray, pd.Series)):
+            raise TypeError("Input data must be a list, tuple, NumPy array, or pandas Series.")
 
         # Check for numeric types *before* converting to a NumPy array
         if isinstance(data, (list, tuple)):
             if not all(isinstance(x, (int, float)) for x in data):
                 raise TypeError("All data elements must be numeric.")
         elif isinstance(data, np.ndarray):
-             if not np.issubdtype(data.dtype, np.number):
+            if not np.issubdtype(data.dtype, np.number):
                 raise TypeError("All data elements must be numeric.")
+        elif isinstance(data, pd.Series):
+            if not np.issubdtype(data.dtype, np.number):
+                raise TypeError("All data elements must be numeric.")
+            data = data.values  # Convert Series to a NumPy array
 
         # Convert to NumPy array for efficiency
         self.data = np.array(data, dtype=np.float64)
@@ -372,9 +377,9 @@ class Sample:
 
     def __str__(self):
         """
-        Returns string representation of the SampleBinomial data.
+        Returns string representation of the Sample data.
         """
-        return f"SampleBinomial Data: {self.data}"
+        return f"Sample Data: {self.data}"
 
     @property
     def standard_error(self):

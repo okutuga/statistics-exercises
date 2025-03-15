@@ -4,6 +4,11 @@ from business_intelligence_viewer import TimingReport  # Importing custom report
 import numpy as np  # Importing numpy for numerical operations
 import os  # Importing os for operating system dependent functionality
 import glob  # Importing glob for file pattern matching
+import sys  # Importing sys for system-specific parameters and functions
+
+# Add the parent directory of 'statistics_exercises' to the Python path
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from utils.statistics_basic import Sample  # Importing custom statistics module
 
 def main():
     # xml_files = glob.glob('G:\\My Drive\\Istruzione\\Coursera\\Statistics\\Excercises\\MotoGP Timing Archive\\XMLs\\RR01 DOHA\\*.xml', recursive=True)  # Get all XML files in the directory
@@ -31,16 +36,23 @@ def main():
             "x_label": "Lap Number",  # Define x-axis label
             "y_label": "Lap Time (seconds)"  # Define y-axis label
         },
-        {
-            "x_data": "run_lap",  # Define x-axis data
-            "y_data": "lap_speed",  # Define y-axis data
-            "title": "Maximum Speed vs Lap Number",  # Define plot title
-            "x_label": "Lap Number",  # Define x-axis label
-            "y_label": "Maximum Speed (m/s)"  # Define y-axis label
-        }
     ]
+    """
+    {
+        "x_data": "run_lap",  # Define x-axis data
+        "y_data": "lap_speed",  # Define y-axis data
+        "title": "Maximum Speed vs Lap Number",  # Define plot title
+        "x_label": "Lap Number",  # Define x-axis label
+        "y_label": "Maximum Speed (m/s)"  # Define y-axis label
+    }
+    """
     report = TimingReport(df)  # Create a TimingReport object
     report.generate_html_report(html_file, plots)  # Generate an HTML report with the plots
+
+    # Some basic statistics
+    print(df[df["rider_number"] == "93"]['lap_time'])
+    sample = Sample(df[df["rider_number"] == "93"]['lap_time'])
+    sample.histogram_probability_data()
 
 def parse_xml(xml_file):
     """
