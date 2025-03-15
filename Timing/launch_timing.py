@@ -1,6 +1,6 @@
 import pandas as pd  # Importing pandas library for data manipulation
 import xml.etree.ElementTree as ET  # Importing ElementTree for parsing XML files
-from business_intelligence_viewer import BikeKPIReport  # Importing custom report generation module
+from business_intelligence_viewer import TimingReport  # Importing custom report generation module
 import numpy as np  # Importing numpy for numerical operations
 import os  # Importing os for operating system dependent functionality
 import glob  # Importing glob for file pattern matching
@@ -9,7 +9,7 @@ def main():
     # xml_files = glob.glob('G:\\My Drive\\Istruzione\\Coursera\\Statistics\\Excercises\\MotoGP Timing Archive\\XMLs\\RR01 DOHA\\*.xml', recursive=True)  # Get all XML files in the directory
     xml_files = ['./timing/Analysis for THA MotoGP RAC.xml']
     parquet_file = './timing/TimingDB.parquet'
-    html_file = './timing/bike_kpi_report.html'
+    html_file = './timing/timing_report.html'
     
     all_data = []  # Initialize a list to store all data
     for file in xml_files:  # Iterate over each XML file
@@ -39,7 +39,7 @@ def main():
             "y_label": "Maximum Speed (m/s)"  # Define y-axis label
         }
     ]
-    report = BikeKPIReport(df)  # Create a BikeKPIReport object
+    report = TimingReport(df)  # Create a TimingReport object
     report.generate_html_report(html_file, plots)  # Generate an HTML report with the plots
 
 def parse_xml(xml_file):

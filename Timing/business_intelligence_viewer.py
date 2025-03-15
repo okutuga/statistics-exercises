@@ -5,10 +5,10 @@ import plotly.express as px
 import plotly.graph_objects as go
 from plotly.subplots import make_subplots
 
-class BikeKPIReport:
+class TimingReport:
     def __init__(self, data):
         """
-        Initializes the BikeKPIReport object.
+        Initializes the TimingReport object.
 
         Args:
             data: A DataFrame containing the KPI data for the bikes.
