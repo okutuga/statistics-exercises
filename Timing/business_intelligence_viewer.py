@@ -58,7 +58,7 @@ class TimingReport:
 
         # Update layout
         fig.update_layout(
-            title='Bike KPIs Report',
+            title='Timing Report',
             legend_title='Riders',
             template='plotly_white'
         )

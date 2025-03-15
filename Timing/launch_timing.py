@@ -25,14 +25,14 @@ def main():
     # Define plots
     plots = [
         {
-            "x_data": "lap_run_lap",  # Define x-axis data
-            "y_data": "lap_time",  # Define y-axis data
-            "title": "Lap Time vs Lap Number",  # Define plot title
+            "x_data": "run_lap",  # Define x-axis data
+            "y_data": "run_cumulative_time_normalized",  # Define y-axis data
+            "title": "Time Gap Evolution",  # Define plot title
             "x_label": "Lap Number",  # Define x-axis label
             "y_label": "Lap Time (seconds)"  # Define y-axis label
         },
         {
-            "x_data": "lap_run_lap",  # Define x-axis data
+            "x_data": "run_lap",  # Define x-axis data
             "y_data": "lap_speed",  # Define y-axis data
             "title": "Maximum Speed vs Lap Number",  # Define plot title
             "x_label": "Lap Number",  # Define x-axis label
@@ -89,21 +89,17 @@ def parse_xml(xml_file):
 
             for lap in run.findall(".//lap"):  # Find all lap elements for the rider
                 
-                """
-                lap_time_dms = int(lap.get("time"))  # Get lap time in decimilliseconds
-                lap_speed_mph = int(lap.get("speed"))  # Get lap speed in meters per hour
-                lap_data = {  # Create a dictionary for lap data
-                    "run_lap": lap.get("run_lap"),  # Get run lap number
-                    "lap_time": lap_time_dms / 10000 if lap_time_dms >= 0 else np.nan,  # Convert lap time to seconds, set to NaN if negative
-                    "lap_speed": lap_speed_mph / 3600,  # Convert lap speed to meters per second
-                }
-                """
                 lap_data = extract_attributes(lap, "lap_")  # Extract lap data
-                # Substitute the prefix of the key with "sector_" if it is a digit
+                # Exception: Substitute the prefix of the key with "sector_" if it is a digit
                 lap_data = {k if not k[-1].isdigit() else "sector_" + k[4:]: v for k, v in lap_data.items()}
-                
+                #Exception: Rename the key "run_lap" to "lap_run_lap"
+                lap_data["run_lap"] = lap_data.pop("lap_run_lap")
                 # Unit conversion
-                lap_data["lap_time"] = int(lap_data["lap_time"]) / 10000 if int(lap_data["lap_time"]) >= 0 else np.nan  # Convert lap time to seconds, set to NaN if negative
+                lap_data["lap_time"] = time_xml_to_seconds(lap_data["lap_time"])  # Convert lap time to seconds
+                lap_data["sector_time_1"] = time_xml_to_seconds(lap_data["sector_time_1"])  # Convert sector 1 time to seconds
+                lap_data["sector_time_2"] = time_xml_to_seconds(lap_data["sector_time_2"])  # Convert sector 2 time to seconds
+                lap_data["sector_time_3"] = time_xml_to_seconds(lap_data["sector_time_3"])  # Convert sector 3 time to seconds
+                lap_data["sector_time_4"] = time_xml_to_seconds(lap_data["sector_time_4"])  # Convert sector 4 time to seconds
                 lap_data["lap_speed"] = int(lap_data["lap_speed"]) / 3600  # Convert lap speed to meters per second
 
                 # Combine rider data and lap data
@@ -123,6 +119,14 @@ def extract_attributes(data_origin, prefix):
             data_buffer[prefix + key] = data_origin.attrib[key]
     return data_buffer
 
+def time_xml_to_seconds(time_xml):
+    """
+    Converts a time in the format HH:MM:SS.MS to seconds.
+    """
+    time_num = int(time_xml)  # Convert the time to an integer)
+    time_seconds = time_num / 10000 if time_num >= 0 else np.nan  # Convert lap time to seconds, set to NaN if negative
+    return time_seconds  # Convert the time to seconds
+
 def write_parquet(data, parquet_file):
     """
     Converts a list of dictionaries to a Parquet file.
@@ -141,6 +145,12 @@ def read_parquet(parquet_file):
         A DataFrame containing the data from the Parquet file.
     """
     df = pd.read_parquet(parquet_file, engine='pyarrow')  # Read the Parquet file into a DataFrame
+    
+    # Add mathematical channels to the DataFrame
+    df['run_cumulative_time'] = df.groupby(['event_season', 'event_id', 'session_id', 'rider_number', 'run_number'])['lap_time'].cumsum()
+    df['lap_time_median'] = df.groupby(['event_season', 'event_id', 'session_id', 'run_number'])['lap_time'].transform('median')
+    df['run_cumulative_time_normalized'] = -( df['run_cumulative_time'] - df.groupby(['event_season', 'event_id', 'session_id', 'rider_number', 'run_number'])['lap_time_median'].cumsum() )
+
     return df  # Return the DataFrame
 
 """
